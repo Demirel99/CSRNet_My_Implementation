@@ -77,25 +77,27 @@ def main():
         # Train one epoch
         train_one_epoch(model, train_loader, optimizer, device)
         
-        # Validate one epoch
-        current_mae = validate_one_epoch(model, val_loader, device)
-
-        # Update learning rate scheduler if used
-        # scheduler.step()
-
-        # Save the model if it's the best one so far
-        is_best = current_mae < best_mae
-        if is_best:
-            best_mae = current_mae
-            print(f"🎉 New best MAE: {best_mae:.2f}. Saving model...")
-            if config.SAVE_MODEL:
-                checkpoint = {
-                    'epoch': epoch,
-                    'model_state_dict': model.state_dict(),
-                    'optimizer_state_dict': optimizer.state_dict(),
-                    'best_mae': best_mae,
-                }
-                torch.save(checkpoint, config.MODEL_CHECKPOINT)
+        # --- Validation (every 10 epochs and on the last epoch) ---
+        if (epoch + 1) % 10 == 0 or (epoch + 1) == config.NUM_EPOCHS:
+            # Validate one epoch
+            current_mae = validate_one_epoch(model, val_loader, device)
+    
+            # Update learning rate scheduler if used
+            # scheduler.step()
+    
+            # Save the model if it's the best one so far
+            is_best = current_mae < best_mae
+            if is_best:
+                best_mae = current_mae
+                print(f"🎉 New best MAE: {best_mae:.2f}. Saving model...")
+                if config.SAVE_MODEL:
+                    checkpoint = {
+                        'epoch': epoch,
+                        'model_state_dict': model.state_dict(),
+                        'optimizer_state_dict': optimizer.state_dict(),
+                        'best_mae': best_mae,
+                    }
+                    torch.save(checkpoint, config.MODEL_CHECKPOINT)
 
 def train_one_epoch(model, data_loader, optimizer, device):
     """Trains the model for one epoch."""
